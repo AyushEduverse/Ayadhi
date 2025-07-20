@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script> <!-- Added Auth SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <!-- Cloudinary Upload Widget Script -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <!-- Your Firebase Configuration -->
+    <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyAAoBex3-UCeiaTeZDN_CvUC1m9FEmPCps",
+        authDomain: "ayushx-f3795.firebaseapp.com",
+        projectId: "ayushx-f3795",
+        storageBucket: "ayushx-f3795.firebasestorage.app",
+        messagingSenderId: "474405932778",
+        appId: "1:474405932778:web:ddd8eff9b51d90f47b9193",
+        measurementId: "G-RTYC29HTRE"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Authentication check for index.html
+      firebase.auth().onAuthStateChanged(user => {
+        if (!user) {
+          // No user is signed in, redirect to login page
+          window.location.href = 'login.html';
+        }
+      });
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Icons for navigation and menu -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="My Avatar" class="my-profile-avatar" id="my-header-avatar">
+            <h1>Ayadhi</h1>
+            </div>
+            <div class="header-right">
+                <button id="profile-button">Profile</button>
+                <button id="logout-button">Logout</button>
+            </div>
+        </header>
+
+        <!-- Removed Search Bar -->
+        
+
+        <!-- Messages List (Conversation View) -->
+        <main class="messages-main" id="conversations-view">
+            <ul id="messages-list">
+                <!-- Message items will be loaded here by JavaScript -->
+            </ul>
+        </main>
+
+        <!-- Active Chat Window (Initially Hidden) -->
+        <div id="chat-window" class="chat-window hidden">
+            <header class="chat-header">
+                <span class="material-icons back-icon">arrow_back</span>
+                <div class="chat-partner-info">
+                    <img src="https://randomuser.me/api/portraits/women/1.jpg" alt="User Avatar" class="chat-partner-avatar">
+                    <div class="chat-partner-text-container"> <!-- New container for name and status -->
+                    <h2 id="chat-partner-name"></h2>
+                        <p class="chat-partner-sub-status"> <!-- New element to group status dot and text -->
+                    <span class="online-status online"></span>
+                            <span id="chat-partner-status-text" class="chat-partner-status-text"></span>
+                        </p>
+                    </div>
+                    <!-- Removed video call and voice call icons -->
+                    
+                </div>
+                <span id="refresh-button" class="material-icons chat-menu-icon">refresh</span> <!-- Refresh button added -->
+                <span id="more-vert-button" class="material-icons chat-menu-icon">more_vert</span>
+            </header>
+            <div class="chat-messages" id="active-chat-messages">
+                <!-- Real-time messages will be loaded here -->
+                
+            </div>
+            <!-- Removed search bar from here -->
+            <!--
+            <div class="search-bar chat-search-bar">
+                <span class="material-icons search-icon">search</span>
+                <input type="text" placeholder="Search messages...">
+            </div>
+            -->
+            <div class="chat-input-container">
+                <div class="chat-input-left-icons">
+                    
+                    
+                </div>
+                <input type="text" id="message-input" placeholder="Type a message..." class="chat-text-input">
+                <div class="chat-input-right-icons">
+                    
+                    
+                    <button id="send-button" class="chat-send-button"><span class="material-icons">send</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section (Initially Hidden) -->
+        <div id="profile-section" class="app-container profile-container">
+            <header class="top-header profile-header">
+                <span class="material-icons back-icon" id="profile-back-button">arrow_back</span>
+                <h1>Profile</h1>
+                <div class="header-right">
+                    <!-- Add any profile specific header icons here, e.g., edit button -->
+                </div>
+            </header>
+
+            <main class="profile-main">
+                <div class="profile-avatar-section">
+                    <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="User Avatar" class="profile-avatar" id="profile-user-avatar">
+                    <!-- Removed online indicator as requested -->
+                    <!-- <span class="online-status profile-online-indicator" id="profile-online-indicator"></span> -->
+                    <!-- Removed the button, now clicking the image itself will trigger upload -->
+                    <!-- <button id="upload-profile-image-button" class="profile-upload-button">Change Profile Image</button> -->
+                    
+                    <h2 id="profile-user-name">Loading...</h2>
+                    <!-- Removed profile status text as requested -->
+                    <!-- <p id="profile-user-status-text" class="profile-status-text">Offline</p> -->
+                    <p id="profile-user-bio-display" class="profile-status-text">No bio provided.</p>
+                </div>
+
+                <div class="profile-details-section">
+                    <div class="detail-item">
+                        <span class="material-icons">person</span>
+                        <input type="text" id="profile-name-input" placeholder="Your Name">
+                    </div>
+                    <div class="detail-item">
+                        <span class="material-icons">description</span>
+                        <textarea id="profile-bio-input" placeholder="Write something about yourself..."></textarea>
+                    </div>
+                    <div class="detail-item">
+                        <span class="material-icons">email</span>
+                        <input type="email" id="profile-user-email" placeholder="Email Address">
+                    </div>
+                    <div class="detail-item">
+                        <span class="material-icons">phone</span>
+                        <input type="tel" id="profile-user-phone" placeholder="Phone Number">
+                    </div>
+                    <!-- Removed the display span for bio, as the textarea above handles editing -->
+                    <!--
+                    <div class="detail-item">
+                        <span class="material-icons">info</span>
+                        <span id="profile-user-bio">A short bio about the user.</span>
+                    </div>
+                    -->
+                </div>
+
+                <div class="profile-actions-section">
+                    <button id="update-profile-button">Update Profile</button>
+                    <button id="settings-button">Settings</button>
+                </div>
+            </main>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <!-- REMOVING THE FOLLOWING SECTION: -->
+        <!--
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span class="material-icons">chat_bubble</span>
+                <span class="nav-text">Messages</span>
+                <span class="notification-badge">9</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-icons">call</span>
+                <span class="nav-text">Calls</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-icons">people</span>
+                <span class="nav-text">People</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-icons">settings</span>
+                <span class="nav-text">Settings</span>
+            </a>
+        </nav>
+        -->
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
+

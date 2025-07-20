@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Sign Up</title>
+    <link rel="stylesheet" href="style.css"> <!-- Using the same style.css for basic styling -->
+    <!-- Google Icons for form icons and password toggles -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Firebase SDKs for Authentication and Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <!-- Your Firebase Configuration - Copy from index.html -->
+    <script>
+      // Your web app's Firebase configuration (COPY FROM INDEX.HTML)
+      const firebaseConfig = {
+        apiKey: "AIzaSyAAoBex3-UCeiaTeZDN_CvUC1m9FEmPCps",
+        authDomain: "ayushx-f3795.firebaseapp.com",
+        projectId: "ayushx-f3795",
+        storageBucket: "ayushx-f3795.firebasestorage.app",
+        messagingSenderId: "474405932778",
+        appId: "1:474405932778:web:ddd8eff9b51d90f47b9193",
+        measurementId: "G-RTYC29HTRE"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
+</head>
+<body>
+    <div class="auth-card">
+        <div id="login-section" class="form-section active">
+            <label for="login-email" class="input-label">Email</label>
+            <div class="input-group">
+                <input type="email" id="login-email" placeholder="Enter your email" required>
+            </div>
+            
+            <label for="login-password" class="input-label">Password</label>
+            <div class="input-group">
+                <input type="password" id="login-password" placeholder="Enter your password" required>
+                <span class="material-icons input-icon-right password-toggle">visibility_off</span>
+            </div>
+
+            
+
+            <button id="login-button" class="auth-button">Login</button>
+
+            <p id="auth-message-login" class="auth-message"></p>
+            <p class="toggle-text">Don't have an account? <a href="#" id="show-signup" class="auth-toggle-link">Sign up</a></p>
+        </div>
+
+        <div id="signup-section" class="form-section hidden">
+            <p class="greeting-subtext">Create an account</p>
+
+            <label for="signup-full-name" class="input-label">Full name</label>
+            <div class="input-group">
+                <span class="material-icons input-icon">person</span>
+                <input type="text" id="signup-full-name" placeholder="Enter your full name" required>
+            </div>
+
+            <label for="signup-email" class="input-label">Email</label>
+            <div class="input-group">
+                <span class="material-icons input-icon">email</span>
+                <input type="email" id="signup-email" placeholder="Enter your email" required>
+            </div>
+            
+            <label for="signup-password" class="input-label">Password</label>
+            <div class="input-group">
+                <span class="material-icons input-icon">lock</span>
+                <input type="password" id="signup-password" placeholder="Create a password" required>
+                <span class="material-icons input-icon-right password-toggle">visibility_off</span>
+            </div>
+
+            <label for="signup-confirm-password" class="input-label">Confirm Password</label>
+            <div class="input-group">
+                <span class="material-icons input-icon">lock</span>
+                <input type="password" id="signup-confirm-password" placeholder="Confirm your password" required>
+                <span class="material-icons input-icon-right password-toggle">visibility_off</span>
+            </div>
+
+            
+            <div class="terms-checkbox">
+                <input type="checkbox" id="terms-agree" required>
+                <label for="terms-agree">I agree with <a href="#">Terms & Conditions</a></label>
+            </div>
+
+            <button id="signup-button" class="auth-button">Sign Up</button>
+
+            <p id="auth-message-signup" class="auth-message"></p>
+            <p class="toggle-text">Already have an account? <a href="#" id="show-login" class="auth-toggle-link">Sign in</a></p>
+        </div>
+    </div>
+    <script src="login.js"></script>
+</body>
+</html> 
