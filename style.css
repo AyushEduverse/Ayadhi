@@ -4,7 +4,7 @@ html, body {
     width: 100%;  /* Ensure html and body take full viewport width */
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    /* overflow-x: hidden; Removed as it can interfere with some mobile browser keyboard behaviors */
 }
 
 body {
@@ -13,7 +13,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 100vh; /* Changed to min-height for better mobile keyboard handling */
     background-color: #f0f2f5; /* Light background for the overall page */
     color: #333;
     -webkit-font-smoothing: antialiased;
@@ -34,13 +34,12 @@ body {
 .app-container {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 420px;
-    height: 95vh;
-    margin: auto; /* Changed to auto for centering */
+    width: 100%; /* Make it full width */
+    height: 100%; /* Make it full height */
+    margin: 0; /* Remove margin to eliminate gap */
     background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px var(--shadow-light);
+    border-radius: 0; /* Remove border-radius for full width app */
+    box-shadow: none; /* Remove box-shadow for full width app */
     overflow: hidden;
     position: relative;
 }
@@ -71,6 +70,7 @@ body {
     color: white;
     border-bottom: none; /* No border for seamless dark look */
     box-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Darker shadow */
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .chat-header .back-icon {
@@ -110,14 +110,14 @@ body {
 }
 
 .chat-partner-info h2 {
-    font-size: 17px;
+    font-size: 1.1rem; /* Converted to rem */
     font-weight: 500;
     margin: 0;
     color: white; /* White text for name */
 }
 
 .chat-partner-status-text {
-    font-size: 13px;
+    font-size: 0.85rem; /* Converted to rem */
     color: #b0b0b0; /* Lighter color for status text in dark header */
 }
 
@@ -142,7 +142,7 @@ body {
 }
 
 .chat-header .chat-header-icon {
-    font-size: 22px;
+    font-size: 1.4rem; /* Converted to rem */
     color: white; /* White icons */
     cursor: pointer;
     margin-left: 20px;
@@ -154,7 +154,7 @@ body {
 }
 
 .chat-header .chat-menu-icon {
-    font-size: 24px;
+    font-size: 1.5rem; /* Converted to rem */
     color: white; /* White icons */
     cursor: pointer;
     margin-left: 20px;
@@ -168,7 +168,7 @@ body {
 /* Chat Messages (for active chat window) */
 .chat-messages {
     flex-grow: 1;
-    padding: 15px;
+    padding: 1rem; /* Adjusted for responsiveness */
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -190,10 +190,10 @@ body {
 }
 
 .message {
-    margin-bottom: 8px; /* Tighter spacing between messages */
-    padding: 8px 12px;
+    margin-bottom: 0.5rem; /* Adjusted for responsiveness */
+    padding: 0.5rem 0.75rem; /* Adjusted for responsiveness */
     border-radius: 8px;
-    max-width: 75%;
+    max-width: 80%; /* Increased max-width for better use of space on larger screens */
     min-height: 35px; /* Ensure enough height for content and timestamp */
     position: relative;
     word-wrap: break-word;
@@ -239,7 +239,7 @@ body {
 }
 
 .message-text {
-    font-size: 14.5px;
+    font-size: 0.9rem; /* Converted to rem */
     margin-bottom: 4px; /* Space between message text and timestamp */
     line-height: 1.35;
     color: white; /* Message text in white for dark theme */
@@ -252,7 +252,7 @@ body {
 }
 
 .message-timestamp {
-    font-size: 0.7em;
+    font-size: 0.65rem; /* Converted to rem */
     color: white;
     margin-top: 5px;
     white-space: nowrap;
@@ -301,6 +301,7 @@ body {
     padding: 8px 10px;
     background-color: #1c1c1c; /* Dark background for input area, matching header */
     box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0; /* Prevent input container from shrinking */
 }
 
 .chat-input-left-icons,
@@ -312,13 +313,13 @@ body {
 
 .chat-text-input {
     flex-grow: 1;
-    padding: 10px 15px;
+    padding: 0.75rem 1rem; /* Adjusted for responsiveness */
     border: none;
     background-color: #333333; /* Dark input field background */
     border-radius: 25px; /* More rounded corners */
-    font-size: 15px;
+    font-size: 1rem; /* Changed to rem */
     color: white; /* White text for input */
-    margin: 0 8px;
+    margin: 0 0.5rem; /* Adjusted for responsiveness */
     resize: none;
     max-height: 100px;
     overflow-y: auto;
@@ -372,7 +373,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
+    padding: 1rem 1.25rem; /* Adjusted for responsiveness */
     background-color: #007bff; /* Using primary color for header */
     color: white;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
@@ -396,7 +397,7 @@ body {
 }
 
 .top-header h1 {
-    font-size: 22px; /* Slightly smaller for better fit */
+    font-size: 1.4rem; /* Converted to rem */
     font-weight: 600;
     margin: 0;
     color: white;
@@ -409,7 +410,7 @@ body {
 
 
 .menu-icon {
-    font-size: 26px; /* Slightly smaller */
+    font-size: 1.6rem; /* Converted to rem */
     color: white;
     cursor: pointer;
     transition: transform 0.2s ease;
@@ -420,14 +421,14 @@ body {
 }
 
 #logout-button {
-    margin-left: 15px;
-    padding: 8px 12px;
+    margin-left: 1rem; /* Converted to rem */
+    padding: 0.5rem 0.75rem; /* Converted to rem */
     background-color: #dc3545; /* A standard red for danger actions */
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.9rem; /* Converted to rem */
     font-weight: 500;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
@@ -438,14 +439,14 @@ body {
 }
 
 #profile-button {
-    margin-left: 15px;
-    padding: 8px 12px;
+    margin-left: 1rem; /* Converted to rem */
+    padding: 0.5rem 0.75rem; /* Converted to rem */
     background-color: #007bff; /* A standard blue color for profile */
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.9rem; /* Converted to rem */
     font-weight: 500;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
@@ -453,6 +454,27 @@ body {
 #profile-button:hover {
     background-color: #0056b3; /* Darker blue on hover */
     transform: translateY(-1px);
+}
+
+#maintenance-mode-button {
+    margin-left: 1rem; /* Consistent margin */
+    padding: 0.5rem 0.75rem; /* Consistent padding */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+#maintenance-mode-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow on hover */
+}
+
+#maintenance-mode-button:active {
+    transform: translateY(0) scale(0.98); /* Click effect: slight press down and scale */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Softer shadow on click */
 }
 
 /* Messages List (Conversation View) */
@@ -488,8 +510,8 @@ body {
 }
 
 .avatar {
-    width: 50px; /* Larger avatar */
-    height: 50px;
+    width: 3.5rem; /* Converted to rem */
+    height: 3.5rem; /* Converted to rem */
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--primary-color); /* Primary color border for emphasis */
@@ -551,6 +573,9 @@ body {
     border-radius: 12px;
     margin-left: 10px;
     font-weight: 600;
+    min-width: 15px; /* Ensure it's wide enough for a single digit */
+    text-align: center;
+    display: inline-block; /* Ensure it respects margins and padding */
 }
 
 /* Material Icons general styling */
@@ -559,43 +584,63 @@ body {
 }
 
 /* Responsive Adjustments */
-@media (max-width: 600px) {
-    body {
-        align-items: flex-start; /* Align to top on small screens */
-        min-height: 100%; /* Ensure body takes full height of content, not necessarily viewport */
-    }
-
-    .app-container {
-        height: 100%; /* Fill full height, adjusted from 100vh for mobile browser UI */
-        width: 100vw; /* Fill full width */
-        margin: 0; /* Remove margin */
-        border-radius: 0; /* Remove border radius */
-        box-shadow: none; /* Remove shadow */
-    }
-
-    .top-header {
-        padding: 10px 15px; /* Adjusted padding */
+@media (max-width: 900px) {
+    .message {
+        max-width: 70%; /* Adjust message width for tablets */
     }
 
     .top-header h1 {
-        font-size: 20px;
+        font-size: 1.3rem;
+    }
+
+    #logout-button,
+    #profile-button {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .avatar {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .message-item {
+        padding: 1rem 1.25rem;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        align-items: flex-start;
+        min-height: 100%;
+    }
+
+    .app-container {
+        height: 100%;
+        width: 100vw;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .top-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .top-header h1 {
+        font-size: 1.2rem;
     }
 
     .header-right {
-        flex-wrap: nowrap; /* Prevent wrapping for header icons */
+        flex-wrap: nowrap;
         justify-content: flex-end;
     }
 
-    #logout-button {
-        margin-left: 10px; /* Smaller margin */
-        padding: 6px 10px; /* Smaller padding */
-        font-size: 13px;
-    }
-
+    #logout-button,
     #profile-button {
-        margin-left: 10px; /* Smaller margin */
-        padding: 6px 10px; /* Smaller padding */
-        font-size: 13px;
+        margin-left: 0.75rem;
+        padding: 0.35rem 0.6rem;
+        font-size: 0.8rem;
     }
 
     .messages-main {
@@ -604,134 +649,174 @@ body {
     }
 
     .message-item {
-        padding: 12px 15px;
+        padding: 0.75rem 1rem;
     }
 
     .avatar {
-        width: 45px;
-        height: 45px;
+        width: 2.8rem;
+        height: 2.8rem;
     }
 
     .online-status {
-        width: 10px;
-        height: 10px;
+        width: 0.6rem;
+        height: 0.6rem;
     }
 
     .message-content strong {
-        font-size: 15px;
+        font-size: 0.9rem;
     }
 
     .message-content span {
-        font-size: 13px;
+        font-size: 0.8rem;
     }
 
     .message-time {
-        font-size: 11px;
+        font-size: 0.7rem;
     }
 
     .chat-header {
-        padding: 12px 15px;
+        padding: 0.75rem 1rem;
     }
 
     .chat-partner-avatar {
-        display: none; /* Explicitly hide the chat partner avatar in responsive view too */
+        display: none;
     }
 
     .chat-partner-info h2 {
-        font-size: 16px;
+        font-size: 1rem;
     }
 
-    /* Adjust chat header icons for mobile */
     .chat-header .chat-header-icon,
     .chat-header .chat-menu-icon {
-        font-size: 20px; /* Slightly smaller icons */
-        margin-left: 15px; /* Tighter spacing */
+        font-size: 1.25rem;
+        margin-left: 0.75rem;
     }
 
     .chat-messages {
-        padding: 10px; /* Reduced padding for messages area */
+        padding: 0.75rem;
     }
 
     .message {
-        max-width: 85%; /* Allow messages to take more width on small screens */
-        padding: 7px 10px; /* Reduced padding for message bubbles */
+        max-width: 90%;
+        padding: 0.5rem 0.7rem;
     }
 
     .message-text {
-        font-size: 14px;
+        font-size: 0.85rem;
     }
 
     .message-timestamp {
-        font-size: 9px;
+        font-size: 0.6rem;
     }
 
     .chat-input-container {
-        padding: 6px 8px; /* Reduced padding for input container */
+        padding: 0.4rem 0.6rem;
     }
 
     .chat-text-input {
-        padding: 8px 12px; /* Reduced padding for input field */
-        font-size: 14px;
-        margin: 0 6px; /* Reduced margin */
+        padding: 0.6rem 0.9rem;
+        font-size: 0.85rem;
+        margin: 0 0.4rem;
     }
 
     .chat-input-icon {
-        font-size: 22px; /* Slightly smaller icons */
-        margin: 0 4px; /* Tighter spacing */
+        font-size: 1.35rem;
+        margin: 0 0.3rem;
     }
 
     .chat-send-button {
-        width: 40px;
-        height: 40px;
+        width: 2.5rem;
+        height: 2.5rem;
     }
 
     .chat-send-button .material-icons {
-        font-size: 22px;
+        font-size: 1.35rem;
     }
 
-    /* Login Page Responsive Adjustments - Ensure consistency */
     .auth-container {
-        padding: 0; /* No padding on mobile for full width */
-        min-height: 100vh; /* Ensure it fills viewport */
+        padding: 0;
+        min-height: 100vh;
     }
 
     .auth-card {
-        padding: 25px; /* Adjusted padding for card on mobile */
-        border-radius: 0; /* No border radius on mobile */
-        box-shadow: none; /* No shadow on mobile */
-        max-width: 100%; /* Ensure it takes full width */
+        padding: 1.5rem;
+        width: 95%;
+        max-width: 400px;
     }
 
-    .input-label {
-        font-size: 14px;
-        margin-bottom: 5px;
+    .auth-card .greeting-header {
+        font-size: 1.8rem;
+    }
+
+    .auth-card .greeting-subtext {
+        font-size: 0.9rem;
     }
 
     .auth-container input {
-        padding: 10px; /* Reduced input padding */
-        font-size: 15px;
-        margin-bottom: 15px; /* Slightly more space */
+        font-size: 0.9rem;
+        padding: 0.75rem;
     }
 
     .auth-button {
-        padding: 12px; /* Reduced button padding */
-        font-size: 16px;
-        margin-top: 10px;
+        padding: 0.8rem 1.2rem;
+        font-size: 1rem;
     }
 
-    #auth-message {
-        margin-top: 10px;
-        font-size: 13px;
+    .toggle-text,
+    .auth-message {
+        font-size: 0.85rem;
     }
 
-    .toggle-text {
-        font-size: 14px;
-        margin-top: 20px; /* Adjusted spacing */
+    .terms-checkbox label {
+        font-size: 0.8rem;
     }
 
-    .form-section {
-        padding: 25px; /* Match auth-card padding */
+    .profile-container {
+        height: 100%;
+        width: 100vw;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
+
+    .profile-container.active {
+        transform: translateX(0);
+    }
+
+    .profile-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .profile-avatar {
+        width: 4.5rem;
+        height: 4.5rem;
+    }
+
+    .profile-online-indicator {
+        width: 0.8rem;
+        height: 0.8rem;
+    }
+
+    .profile-avatar-section h2 {
+        font-size: 1.1rem;
+    }
+
+    .profile-details-section,
+    .profile-actions-section {
+        padding: 1rem;
+    }
+
+    .detail-item span,
+    .detail-item input[type="text"],
+    .detail-item textarea {
+        font-size: 0.85rem;
+    }
+
+    .profile-upload-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
 }
 
 /* Login Page Styles - Exact Match Redesign */
@@ -1257,14 +1342,14 @@ body {
 }
 
 .chat-partner-info h2 {
-    font-size: 17px;
+    font-size: 1.1rem; /* Converted to rem */
     font-weight: 500;
     margin: 0;
     color: white; /* White text for name */
 }
 
 .chat-partner-status-text {
-    font-size: 13px;
+    font-size: 0.85rem; /* Converted to rem */
     color: #b0b0b0; /* Lighter color for status text in dark header */
 }
 
@@ -1293,4 +1378,17 @@ body {
 
 .message-item .online-status.offline {
     background-color: #6c757d; /* Grey for offline */
+}
+
+.unread-badge {
+    background-color: #dc3545; /* Red for unread count */
+    color: white;
+    font-size: 12px;
+    padding: 3px 7px;
+    border-radius: 12px;
+    margin-left: 10px;
+    font-weight: 600;
+    min-width: 15px; /* Ensure it's wide enough for a single digit */
+    text-align: center;
+    display: inline-block; /* Ensure it respects margins and padding */
 } 

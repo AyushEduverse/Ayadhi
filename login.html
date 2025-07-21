@@ -26,6 +26,41 @@
 
       // Initialize Firebase
       firebase.initializeApp(firebaseConfig);
+
+      // --- Maintenance Mode Check (New) ---
+      const appStatusRef = firebase.firestore().collection('appStatus').doc('status');
+      appStatusRef.onSnapshot(docSnapshot => {
+          if (docSnapshot.exists) {
+              const data = docSnapshot.data();
+              // Allow admin to bypass maintenance mode
+              if (firebase.auth().currentUser && firebase.auth().currentUser.uid === ADMIN_UID) {
+                  console.log("Admin user detected. Bypassing maintenance mode.");
+                  // If admin is on maintenance page and mode is OFF, redirect them back to login
+                  if (!data.isMaintenanceMode && window.location.href.includes('Maintenance.html')) {
+                      window.location.href = 'login.html';
+                  }
+                  return; // Admin bypasses further redirection checks
+              }
+
+              if (data.isMaintenanceMode) {
+                  if (!window.location.href.includes('Maintenance.html')) {
+                      window.location.href = 'Maintenance.html';
+                  }
+              } else {
+                  // If maintenance mode is OFF and user is on maintenance page, redirect to login.html
+                  if (window.location.href.includes('Maintenance.html')) {
+                      window.location.href = 'login.html';
+                  }
+              }
+          } else {
+              console.warn("App status document not found. Assuming no maintenance mode.");
+              appStatusRef.set({ isMaintenanceMode: false }, { merge: true });
+          }
+      }, error => {
+          console.error("Error listening to app status:", error);
+      });
+      // --- End Maintenance Mode Check ---
+
     </script>
 </head>
 <body>

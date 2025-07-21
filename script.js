@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileNameInput = document.getElementById('profile-name-input');
     const profileBioInput = document.getElementById('profile-bio-input');
     const updateProfileButton = document.getElementById('update-profile-button');
+    const headerUserName = document.getElementById('header-user-name'); // New: Select the h1 for user name display
+    const maintenanceModeButton = document.getElementById('maintenance-mode-button'); // New: Maintenance mode button
+
+    // IMPORTANT: Replace with your actual Firebase Admin UID
+    const ADMIN_UID = 'qj9taJu0OgXmiZywyIaPsF39xN43'; 
 
     // Removed emojiButton and attachFileButton selectors
     // Removed micButton selector
@@ -47,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // New: Object to store unsubscribe functions for real-time user status listeners in the conversation list
     let unsubscribeUserStatuses = {};
+    let unsubscribeConversations = null; // New: For unsubscribing from conversations list listener
 
     // Cloudinary configuration (REPLACE WITH YOUR ACTUAL CLOUD NAME AND UPLOAD PRESET)
     const cloudinaryCloudName = 'dfqq11sxk'; // Replace with your Cloudinary Cloud Name
@@ -96,7 +102,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Main initialization logic, waiting for authentication state
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // --- Maintenance Mode Check (New) ---
+    const appStatusRef = firebase.firestore().collection('appStatus').doc('status');
+    appStatusRef.onSnapshot(docSnapshot => {
+        if (docSnapshot.exists) {
+            const data = docSnapshot.data();
+            // Allow admin to bypass maintenance mode
+            if (firebase.auth().currentUser && firebase.auth().currentUser.uid === ADMIN_UID) {
+                console.log("Admin user detected. Bypassing maintenance mode.");
+                // If admin is on maintenance page and mode is OFF, redirect them back to index
+                if (!data.isMaintenanceMode && window.location.href.includes('Maintenance.html')) {
+                    window.location.href = 'index.html';
+                }
+                return; // Admin bypasses further redirection checks
+            }
+
+            if (data.isMaintenanceMode) {
+                if (!window.location.href.includes('Maintenance.html')) {
+                    window.location.href = 'Maintenance.html';
+                }
+            } else {
+                // If maintenance mode is OFF and user is on maintenance page, redirect to index.html
+                if (window.location.href.includes('Maintenance.html')) {
+                    window.location.href = 'index.html';
+                }
+            }
+            // Update button text if the button exists and current user is admin
+            if (maintenanceModeButton && currentUserId === ADMIN_UID) {
+                updateMaintenanceButtonText();
+            }
+        } else {
+            console.warn("App status document not found. Assuming no maintenance mode.");
+            // Optionally, create the document with default false here if it's missing
+            appStatusRef.set({ isMaintenanceMode: false }, { merge: true });
+        }
+    }, error => {
+        console.error("Error listening to app status:", error);
+        // In case of error, assume no maintenance mode or handle as a critical error
+    });
+    // --- End Maintenance Mode Check ---
+
+    // Authentication check for index.html
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUserId = user.uid;
@@ -110,6 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Start periodic online status updates
             startOnlineStatusMonitoring();
 
+            // Show maintenance button if current user is admin
+            if (currentUserId === ADMIN_UID && maintenanceModeButton) {
+                maintenanceModeButton.style.display = 'inline-block'; // Show the button
+                updateMaintenanceButtonText(); // Set initial text
+            } else if (maintenanceModeButton) {
+                maintenanceModeButton.style.display = 'none'; // Hide for non-admins
+            }
+
             try {
                 const doc = await db.collection('users').doc(user.uid).get();
                 if (doc.exists) {
@@ -117,6 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update header avatar
                     if (myHeaderAvatar) {
                         myHeaderAvatar.src = doc.data().avatar || 'https://randomuser.me/api/portraits/men/1.jpg';
+                    }
+                    // Update header user name
+                    if (headerUserName) {
+                        headerUserName.textContent = currentUserName;
                     }
                     console.log("User data fetched. Current user name:", currentUserName);
                 } else {
@@ -134,6 +195,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (myHeaderAvatar) {
                         myHeaderAvatar.src = 'https://randomuser.me/api/portraits/men/1.jpg';
                     }
+                    // Update header user name for new user
+                    if (headerUserName) {
+                        headerUserName.textContent = currentUserName;
+                    }
                 }
                 await fetchAndRenderUsersAsConversations(); // Render conversations ONLY after current user is known
             } catch (error) {
@@ -142,6 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fallback for header avatar if error
                 if (myHeaderAvatar) {
                     myHeaderAvatar.src = 'https://randomuser.me/api/portraits/men/1.jpg';
+                }
+                // Fallback for header user name if error
+                if (headerUserName) {
+                    headerUserName.textContent = currentUserName;
                 }
                 await fetchAndRenderUsersAsConversations();
             }
@@ -199,85 +268,140 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Unsubscribe from previous conversation list listener if it exists
+        if (unsubscribeConversations) {
+            unsubscribeConversations();
+            unsubscribeConversations = null; // Clear it out
+        }
+
         messagesList.innerHTML = '';
+        
+        // Use a map to store user data for quick lookup
+        const usersMap = new Map();
+
+        // First, fetch all users once
         try {
             const usersSnapshot = await db.collection('users').get();
-            const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            usersSnapshot.docs.forEach(doc => {
+                const userData = { id: doc.id, ...doc.data() };
+                usersMap.set(userData.id, userData);
+            });
+        } catch (error) {
+            console.error("Error fetching users for conversation list:", error);
+            return;
+        }
 
-            for (const user of users) { // Changed to for...of to use await inside loop
-                // Don't show the current logged-in user in the friend list
-                if (user.id === currentUserId) continue;
+        // Now set up real-time listener for chats involving the current user
+        unsubscribeConversations = db.collection('chats')
+            .where('participants', 'array-contains', currentUserId)
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    const chatData = change.doc.data();
+                    const chatRoomId = change.doc.id;
 
-                const li = document.createElement('li');
-                li.classList.add('message-item');
-                li.dataset.id = user.id;
+                    // Determine the other participant
+                    const otherParticipantId = chatData.participants.find(pId => pId !== currentUserId);
+                    const user = usersMap.get(otherParticipantId);
 
-                let avatarHtml = '';
-                if (user.avatar) {
-                    avatarHtml = `<img src="${user.avatar}" alt="${user.name}" class="avatar">`;
-                } else {
-                    const initial = user.name ? user.name.charAt(0).toUpperCase() : '';
-                    avatarHtml = `<div class="avatar" style="background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; color: #555;">${initial}</div>`;
-                }
+                    if (!user) {
+                        console.warn("User data not found for participant:", otherParticipantId, ". Skipping conversation.");
+                        return; // Skip if user data isn't available (e.g., user deleted)
+                    }
 
-                // Fetch last message for this conversation
-                const chatRoomId = [currentUserId, user.id].sort().join('_');
-                let lastMessageText = "No messages yet";
-                let lastMessageTime = "";
+                    // Find existing list item or create a new one
+                    let li = messagesList.querySelector(`.message-item[data-id="${user.id}"]`);
 
-                try {
-                    const chatDoc = await db.collection('chats').doc(chatRoomId).get();
-                    if (chatDoc.exists && chatDoc.data().lastMessage) {
-                        lastMessageText = chatDoc.data().lastMessage;
-                        const timestamp = chatDoc.data().lastMessageTimestamp;
-                        if (timestamp && timestamp.toDate) {
-                            const date = timestamp.toDate();
+                    if (change.type === 'added' || change.type === 'modified') {
+                        if (!li) {
+                            li = document.createElement('li');
+                            li.classList.add('message-item');
+                            li.dataset.id = user.id;
+                            li.addEventListener('click', () => {
+                                setActiveConversation(user);
+                            });
+                            messagesList.appendChild(li); // Add to DOM if new
+                        }
+                        // Update data-timestamp attribute for sorting
+                        li.dataset.timestamp = chatData.lastMessageTimestamp ? chatData.lastMessageTimestamp.toMillis() : 0;
+
+                        let avatarHtml = '';
+                        if (user.avatar) {
+                            avatarHtml = `<img src="${user.avatar}" alt="${user.name}" class="avatar">`;
+                        } else {
+                            const initial = user.name ? user.name.charAt(0).toUpperCase() : '';
+                            avatarHtml = `<div class="avatar" style="background-color: #f0f0f0; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; color: #555;">${initial}</div>`;
+                        }
+
+                        let lastMessageText = chatData.lastMessage || "No messages yet";
+                        let lastMessageTime = "";
+                        if (chatData.lastMessageTimestamp && chatData.lastMessageTimestamp.toDate) {
+                            const date = chatData.lastMessageTimestamp.toDate();
                             lastMessageTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         }
-                    }
-                } catch (error) {
-                    console.error("Error fetching last message for conversation:", chatRoomId, error);
-                }
-                
-                // Determine online status based on lastOnline timestamp
-                const onlineStatus = isUserReallyOnline(user.lastOnline) ? 'online' : 'offline';
 
-                li.innerHTML = `
-                    <div class="avatar-container">
-                        ${avatarHtml}
-                        <span class="online-status ${onlineStatus}"></span>
-                    </div>
-                    <div class="message-content">
-                        <strong>${user.name}</strong>
-                        <span>${lastMessageText}</span>
-                    </div>
-                    <span class="message-time">${lastMessageTime}</span>
-                `;
+                        // Get unread count for the current user
+                        const unreadCount = chatData.unreadCounts && chatData.unreadCounts[currentUserId] ? chatData.unreadCounts[currentUserId] : 0;
+                        let unreadBadgeHtml = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
 
-                li.addEventListener('click', () => {
-                    setActiveConversation(user);
-                });
+                        li.innerHTML = `
+                            <div class="avatar-container">
+                                ${avatarHtml}
+                                <span class="online-status ${isUserReallyOnline(user.lastOnline) ? 'online' : 'offline'}"></span>
+                            </div>
+                            <div class="message-content">
+                                <strong>${user.name}</strong>
+                                <span>${lastMessageText}</span>
+                            </div>
+                            <span class="message-time">${lastMessageTime}</span>
+                            ${unreadBadgeHtml}
+                        `;
 
-                messagesList.appendChild(li);
-
-                // Start real-time listener for this user's online status
-                unsubscribeUserStatuses[user.id] = db.collection('users').doc(user.id)
-                    .onSnapshot(docSnapshot => {
-                        const userData = docSnapshot.data();
-                        // Use isUserReallyOnline for live updates in conversation list
-                        const newOnlineStatus = isUserReallyOnline(userData && userData.lastOnline) ? 'online' : 'offline';
-                        const statusSpan = li.querySelector('.online-status');
-                        if (statusSpan) {
-                            statusSpan.classList.remove('online', 'offline');
-                            statusSpan.classList.add(newOnlineStatus);
+                        // Ensure user status listener is active for this user
+                        if (!unsubscribeUserStatuses[user.id]) {
+                            unsubscribeUserStatuses[user.id] = db.collection('users').doc(user.id)
+                                .onSnapshot(docSnapshot => {
+                                    const userData = docSnapshot.data();
+                                    const newOnlineStatus = isUserReallyOnline(userData && userData.lastOnline) ? 'online' : 'offline';
+                                    const statusSpan = li.querySelector('.online-status');
+                                    if (statusSpan) {
+                                        statusSpan.classList.remove('online', 'offline');
+                                        statusSpan.classList.add(newOnlineStatus);
+                                    }
+                                }, error => {
+                                    console.error("Error listening to user status in conversation list:", user.id, error);
+                                });
                         }
-                    }, error => {
-                        console.error("Error listening to user status in conversation list:", user.id, error);
-                    });
-            }; // End of for...of loop
-        } catch (error) {
-            console.error("Error fetching users: ", error);
+
+                    } else if (change.type === 'removed') {
+                        if (li) {
+                            li.remove();
+                            // Also unsubscribe user status if conversation is removed
+                            if (unsubscribeUserStatuses[user.id]) {
+                                unsubscribeUserStatuses[user.id]();
+                                delete unsubscribeUserStatuses[user.id];
+                            }
+                        }
+                    }
+                });
+                // Re-sort messagesList after updates (optional, but good for consistency)
+                sortConversationsList();
+
+            }, (error) => {
+                console.error("Error listening to conversations:", error);
+            });
+
+        // Helper to sort conversations (e.g., by last message timestamp)
+        function sortConversationsList() {
+            const items = Array.from(messagesList.children);
+            items.sort((a, b) => {
+                const timestampA = parseInt(a.dataset.timestamp || '0');
+                const timestampB = parseInt(b.dataset.timestamp || '0');
+                return timestampB - timestampA; // Sort in descending order (latest first)
+            });
+            items.forEach(item => messagesList.appendChild(item));
         }
+
+
     }
 
     // Event listener for the new refresh button
@@ -289,6 +413,55 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Refresh button clicked, but no active conversation.");
         }
     });
+
+    // Helper function to update the maintenance button's text based on current mode
+    async function updateMaintenanceButtonText() {
+        try {
+            const doc = await db.collection('appStatus').doc('status').get();
+            if (doc.exists && doc.data().isMaintenanceMode) {
+                maintenanceModeButton.textContent = 'Turn Off Maintenance';
+                maintenanceModeButton.style.backgroundColor = '#dc3545'; // Red for OFF
+            } else {
+                maintenanceModeButton.textContent = 'Turn On Maintenance';
+                maintenanceModeButton.style.backgroundColor = '#28a745'; // Green for ON
+            }
+        } catch (error) {
+            console.error("Error reading maintenance status for button text:", error);
+            maintenanceModeButton.textContent = 'Error Mode'; // Indicate error
+            maintenanceModeButton.style.backgroundColor = '#ffc107';
+        }
+    }
+
+    // Event listener for the Maintenance Mode button
+    if (maintenanceModeButton) {
+        maintenanceModeButton.addEventListener('click', async () => {
+            if (currentUserId !== ADMIN_UID) {
+                alert("You are not authorized to toggle maintenance mode.");
+                return;
+            }
+
+            try {
+                const appStatusDocRef = db.collection('appStatus').doc('status');
+                const doc = await appStatusDocRef.get();
+                let currentMode = false;
+
+                if (doc.exists) {
+                    currentMode = doc.data().isMaintenanceMode;
+                }
+
+                const newMode = !currentMode;
+                await appStatusDocRef.set({ isMaintenanceMode: newMode }, { merge: true });
+                console.log("Maintenance mode toggled to:", newMode);
+                alert(`Maintenance mode is now ${newMode ? 'ON' : 'OFF'}.`);
+
+                updateMaintenanceButtonText(); // Update button text immediately
+
+            } catch (error) {
+                console.error("Error toggling maintenance mode:", error);
+                alert("Failed to toggle maintenance mode. Check console for details.");
+            }
+        });
+    }
 
     // Function to update typing status in Firestore
     // This function sets the typing status of `currentUserId` *for* `chatPartnerId`
@@ -428,6 +601,20 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             activeChatMessages.scrollTop = activeChatMessages.scrollHeight;
         }, 100);
+
+        // Update read status for the current user in this conversation
+        const chatRoomId = [currentUserId, conversation.id].sort().join('_');
+        db.collection('chats').doc(chatRoomId).set({
+            unreadCounts: { // Reset unread count for current user
+                [currentUserId]: 0
+            }
+        }, { merge: true }).then(() => {
+            console.log("Unread count reset for", currentUserId, "in chat", chatRoomId);
+            // Re-render conversations to update unread badges on the home screen
+            fetchAndRenderUsersAsConversations();
+        }).catch(error => {
+            console.error("Error resetting unread count:", error);
+        });
     }
 
     function displayChatMessage(docId, sender, text, type, timestamp, animate = false) {
@@ -578,10 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    messageInput.addEventListener('blur', () => {
-        setTypingStatus(false); // Ensure typing status is false when input loses focus
-    });
-
 
     function sendMessage() {
         const text = messageInput.value.trim();
@@ -590,8 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Clear typing status immediately after sending a message
-        setTypingStatus(false); // Explicitly set to false
+        // Removed: setTypingStatus(false); // Explicitly set to false - This will be moved below
 
         console.log("Attempting to send message with:");
         console.log("currentUserId (in sendMessage):", currentUserId);
@@ -612,11 +794,25 @@ document.addEventListener('DOMContentLoaded', () => {
             messageInput.value = '';
             console.log("Message sent!");
 
+            // Move clearing typing status here, after input is cleared and focused
+            setTypingStatus(false); // Explicitly set to false after message is sent and input is ready
+
             db.collection('chats').doc(chatRoomId).set({
                 lastMessage: text,
                 lastMessageTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                participants: [currentUserId, activeConversation.id]
+                lastMessageSenderId: currentUserId,
+                participants: [currentUserId, activeConversation.id],
+                unreadCounts: { // Initialize or update unread counts
+                    [activeConversation.id]: firebase.firestore.FieldValue.increment(1), // Increment for the receiver
+                    [currentUserId]: 0 // Reset for the sender
+                }
             }, { merge: true });
+
+            // Re-focus the input to keep the keyboard open, with a slight delay for robustness
+            setTimeout(() => {
+                messageInput.focus();
+                activeChatMessages.scrollTop = activeChatMessages.scrollHeight; // Ensure auto-scroll after sending
+            }, 10);
 
         })
         .catch((error) => {
@@ -649,6 +845,9 @@ document.addEventListener('DOMContentLoaded', () => {
         chatWindow.classList.remove('active');
         conversationsView.classList.remove('hidden');
         activeConversation = null;
+
+        // Explicitly re-fetch and render conversations to ensure live data
+        fetchAndRenderUsersAsConversations();
     });
 
     // Event listeners for new chat input icons (placeholders for future features)
